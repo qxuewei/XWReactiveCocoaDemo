@@ -16,7 +16,7 @@
 @interface ViewController ()
 @property (nonatomic, strong) id<RACSubscriber> subscriber;
 @property (weak, nonatomic) IBOutlet UIButton *BTN;
-
+@property (weak, nonatomic) IBOutlet UILabel *label;
 @property (weak, nonatomic) IBOutlet UITextField *textField;
 @property (weak, nonatomic) IBOutlet GrayView *grayView;
 @end
@@ -71,12 +71,67 @@
     
 //    [self RAC_Event];
     
-    [self RAC_Noti];
+//    [self RAC_Noti];
     
+//    [self RAC_Text];
+    
+//    [self liftSelector];
+    
+    [self macro];
+}
+
+
+
+//常用宏
+-(void)macro{
+    //1.`RAC(TARGET, [KEYPATH, [NIL_VALUE]])`:用于给某个对象的某个属性绑定。
+    RAC(self.label,text) = self.textField.rac_textSignal;
+    //相当于:
+//    [self.textField.rac_textSignal subscribeNext:^(id x) {
+//        self.label.text = x;
+//    }];
+    
+    //`RACObserve(self, name) `:监听某个对象的某个属性,返回的是信号。
+//    [RACObserve(self.view,frame) subscribeNext:^(id x) {
+//        NSLog(@"x:%@",x);
+//    }];
+    
+    //4. `RACTuplePack`：把数据包装成RACTuple（元组类）
+    //把一个对象包装成元组对象
+    RACTuple *tuple = RACTuplePack(@"Xuewei",@"18");
+    //解包元组,把元组的值，按顺序给参数里面的变量赋值
+    RACTupleUnpack(NSString *name,NSString *age) = tuple;
+    NSLog(@"name:%@  -  age:%@",name,age);
+}
+
+
+-(void)liftSelector{
+    RACSignal *network0 = [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+        NSLog(@"AFN -> 第一个网络请求!");
+        [subscriber sendNext:@[@0,@1,@2]];
+        return nil;
+    }];
+    RACSignal *network1 = [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+        NSLog(@"AFN -> 第二个网络请求!");
+        [subscriber sendNext:@[@3,@4,@5]];
+        return nil;
+    }];
+    //当所有信号都请求完成数据,并发送数据时,执行
+    /**
+     *  所有信号发送数据之后执行 Selector 方法
+     *
+     *  @param SEL 所执行的方法,注意应该有几个信号就需要有几个参数,一一对应!
+     *  @param NSArray 所有信号包装成的数组
+     *
+     */
+    [self rac_liftSelector:@selector(updateMainUIWithNet0:andNet1:) withSignalsFromArray:@[network0,network1]];
+}
+-(void)updateMainUIWithNet0:(NSArray *)net0Arr andNet1:(NSArray *)net1Arr{
+    NSLog(@"主线程更新UI net0Arr:%@   net1Arr:%@",net0Arr,net1Arr);
 }
 
 //5.RAC作用五:监听文本框输入
--(void)RAC_{
+-(void)RAC_Text{
     [_textField.rac_textSignal subscribeNext:^(id x) {
         NSLog(@"当前输入框值:%@",x);
     }];

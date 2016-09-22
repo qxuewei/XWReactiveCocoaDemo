@@ -12,6 +12,7 @@
 //#import "NSObject+RACKVOWrapper.h"
 #import "GrayView.h"
 #import "Model.h"
+#import "RACReturnSignal.h"
 
 @interface ViewController ()
 @property (nonatomic, strong) id<RACSubscriber> subscriber;
@@ -77,9 +78,71 @@
     
 //    [self liftSelector];
     
-    [self macro];
+//    [self macro];
+    
+//    [self racMulticastConnection];
+    [self commend];
+    [self bind];
 }
 
+
+-(void)bind{
+    RACSubject *subject = [RACSubject subject];
+    RACSignal *bindSignal = [subject bind:^RACStreamBindBlock{
+        return ^RACSignal *(id value, BOOL *stop){
+            NSLog(@"接收到源信号的内容->%@",value);
+            
+            //可在此处对请求的结果进行修改
+            value = [NSString stringWithFormat:@"XW+%@",value];
+            
+            return [RACReturnSignal return:value];
+        };
+    }];
+    //订阅绑定信号
+    [bindSignal subscribeNext:^(id x) {
+        NSLog(@"接收到订阅的信号:%@",x);
+    }];
+    
+    //发送信号
+    [subject sendNext:@"12345"];
+}
+
+-(void)commend{
+    //创建命令 内包含信号(必须返回信号,不能为nil)
+    RACCommand *commend = [[RACCommand alloc] initWithSignalBlock:^RACSignal *(id input) {
+        NSLog(@"获取input:%@",input);
+        return [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+            NSLog(@"执行命令!");
+            return nil;
+        }];
+    }];
+    //订阅命令内部的信号
+    RACSignal *signal = [commend execute:@"123"];
+    [signal subscribeNext:^(id x) {
+        NSLog(@"订阅信号:%@",x);
+    }];
+}
+
+-(void)racMulticastConnection{
+    //1.创建信号类
+    RACSignal *signal = [RACSignal createSignal:^RACDisposable *(id<RACSubscriber> subscriber) {
+        NSLog(@"发送数组");
+        //5.发送信号,回调所订阅的方法
+        [subscriber sendNext:@[@1,@2,@3]];
+        return nil;
+    }];
+    //2.把信号类转化成连接类
+    RACMulticastConnection *multicastConnect = [signal publish];
+    //3.订阅连接类信号
+    [multicastConnect.signal subscribeNext:^(id x) {
+        NSLog(@"订阅信号源第一次:%@",x);
+    }];
+    [multicastConnect.signal subscribeNext:^(id x) {
+        NSLog(@"订阅信号源第二次:%@",x);
+    }];
+    //4.连接
+    [multicastConnect connect];
+}
 
 
 //常用宏

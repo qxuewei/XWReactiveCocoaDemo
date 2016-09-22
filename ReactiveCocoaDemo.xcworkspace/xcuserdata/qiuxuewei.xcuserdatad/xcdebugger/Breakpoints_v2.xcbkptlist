@@ -10,12 +10,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "ReactiveCocoaDemo/ViewController.m"
-            timestampString = "495946307.5984"
+            timestampString = "496203657.043775"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "193"
-            endingLineNumber = "193"
-            landmarkName = "-RACSequenceToModel"
+            startingLineNumber = "215"
+            endingLineNumber = "215"
+            landmarkName = "-RAC_Delegate"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>
